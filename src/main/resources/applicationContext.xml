@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jaxws="http://cxf.apache.org/jaxws" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="
+	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd     
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.1.xsd   
+        http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd">
+
+	<!-- 激活spring的注解. -->
+	<context:annotation-config />
+	<context:component-scan base-package="com.coderme">  
+        <context:exclude-filter expression="org.springframework.stereotype.Controller"  
+            type="annotation" />  
+    </context:component-scan>
+	<bean id="springContextUtil" class="com.hnky.core.util.SpringContextUtil" />
+
+	<bean id="md5Encoder" class="com.hnky.core.util.MD5Encoder" />
+
+	<!-- 一般的视图配置 定义跳转的文件的前后缀  -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">  
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+        <property name="contentType" value="text/html;charset=UTF-8" />
+    </bean>
+    
+    
+    <!-- 自定义jdbc.properties的位置 -->
+	<bean id="dataConfigurer" class="com.hnky.core.config.JdbcConfig"/>
+	<!-- 属性配置 -->
+    <bean id="propertyConfigurer"
+       class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" depends-on="dataConfigurer"/>
+    <!--    p:location="classpath:jdbc.properties" /> -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource" >  
+        <property name="driverClassName" value="${jdbc.driver}" />  
+        <property name="url" value="${jdbc.url}" />  
+        <property name="username" value="${jdbc.username}" />  
+        <property name="password" value="${jdbc.password}"></property>  
+    </bean>
+  
+    <bean id ="proInterceptor" class="com.hnky.core.interceptor.PropertyInterceptor" /> 
+	<!-- 配置hibernate相关信息 -->  
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource"/>  
+        <property name="hibernateProperties">  
+            <props>  
+                <!-- 非常重要，不配置则出现Error applying BeanValidation relational constraints -->
+                <prop key="javax.persistence.validation.mode">none</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>  
+                <prop key="hibernate.show_sql">false</prop>  
+                <!-- 配置启动应用时，是否根据Hibernate映射自动创建数据表 -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>  
+            </props>  
+        </property>  
+        <property name="configLocations">  
+            <list>  
+                <value>  
+                    classpath:hibernate.cfg.xml  
+                </value>  
+            </list>  
+        </property>
+        <property name="entityInterceptor" ref="proInterceptor"/>
+    </bean>  
+    <!-- 定义事务管理 -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">  
+        <property name="sessionFactory" ref="sessionFactory"/>  
+    </bean>  
+	
+	<!-- 声明式事务：注解方式 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+    <!-- Saves a locale change using a session   
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver" /> --> 
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>messages</value>
+				<value>exception</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 继承自AuthorizingRealm的自定义Realm,即指定Shiro验证用户登录的类为自定义的MyRealm -->  
+    <bean id="myRealm" class="com.coderme.util.MyRealm"/>  
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">  
+        <property name="realm" ref="myRealm"/>  
+    </bean>
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">  
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/login" />    
+        <property name="unauthorizedUrl" value="/login"/>
+        <!-- anon：它对应的过滤器里面是空的,什么都没做,这 -->  
+        <!-- authc：该过滤器下的页面必须验证后才能访问,它是Shiro内置的一个拦截器org.apache.shiro.web.filter.authc.FormAuthenticationFilter -->  
+        <property name="filterChainDefinitions">  
+            <value>  
+                /rest/**=anon
+                /login=anon
+                /register=anon
+                /css/**=anon
+                /js/**=anon
+                /images/**=anon
+                /jfreechart**=anon
+                /druid**=anon
+                /admin** = authc
+            </value>  
+        </property>  
+    </bean>
+    
+    <bean id="exceptionHandler" class="com.hnky.core.exception.ExceptionHandler"/> 
+    
+    <!-- 开启Shiro的注解(如@RequiresRoles,@RequiresPermissions),需借助SpringAOP扫描使用Shiro注解的类,并在必要时进行安全逻辑验证 -->  
+    <!-- 配置以下两个bean即可实现此功能       权限通过注解的方式硬编码在程序中,查看起来不是很方便,没必要使用-->  
+    <!-- shiro注解方式必须放到mvc的文件中才会生效 -->
+    <!-- Enable Shiro Annotations for Spring-configured beans. Only run after the lifecycleBeanProcessor has run -->  
+    <!--   
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor"/>  
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">  
+        <property name="securityManager" ref="securityManager"/>  
+    </bean> -->
+</beans>  

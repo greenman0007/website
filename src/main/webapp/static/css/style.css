@@ -1,0 +1,7 @@
+@CHARSET "UTF-8";
+.blog-author{
+    background: url('../images/author.png') no-repeat scroll 0 0;
+}
+.blog-opened{
+	background: url('../images/open.png') no-repeat scroll 0 0;
+}
