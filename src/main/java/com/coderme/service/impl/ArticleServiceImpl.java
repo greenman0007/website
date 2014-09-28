@@ -16,7 +16,7 @@ import com.hnky.core.pagenation.DataGridDto;
  * @author zhang tengfei
  * 2014-9-26
  */
-@Service
+@Service(value="articleService")
 public class ArticleServiceImpl implements ArticleService {
 
 	@Resource
@@ -25,6 +25,16 @@ public class ArticleServiceImpl implements ArticleService {
 	@Override
 	public DataGridDto<Article> findByPage(int startIndex, int pageSize) {
 		return articleDAO.findByPage(startIndex, pageSize);
+	}
+
+	@Override
+	public Article findByPermalink(String permalink) {
+		return articleDAO.findByPermalink(permalink);
+	}
+
+	@Override
+	public Article get(Long id) {
+		return articleDAO.get(id);
 	}
 
 }

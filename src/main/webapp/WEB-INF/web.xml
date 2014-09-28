@@ -54,6 +54,14 @@
         <filter-name>shiroFilter</filter-name>  
         <url-pattern>/*</url-pattern>  
     </filter-mapping> 
+   <!-- <filter>
+		<filter-name>PermaLinkFilter</filter-name>
+		<filter-class>com.coderme.util.filter.PermaLinkFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>PermaLinkFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> --> 
 	<!-- 实例化Spring容器 -->  
     <!-- 应用启动时,该监听器被执行,它会读取Spring相关配置文件,其默认会到WEB-INF中查找applicationContext.xml
        org.springframework.web.context.ContextLoaderListener --> 
@@ -86,6 +94,14 @@
 		<servlet-name>jfreechart</servlet-name>
 		<url-pattern>/jfreechart</url-pattern>
 	</servlet-mapping>
+	<!--  --><servlet>
+		<servlet-name>PermaLinkServlet</servlet-name>
+		<servlet-class>com.coderme.servlet.PermaLinkServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>PermaLinkServlet</servlet-name>
+		<url-pattern>*.html</url-pattern>
+	</servlet-mapping>
 	<!--配置找不到页面时返回的页面 -->  
     <error-page>   
         <error-code>404</error-code>   
@@ -97,6 +113,6 @@
         <session-timeout>10</session-timeout>  
     </session-config>
     <welcome-file-list>
-        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 </web-app>

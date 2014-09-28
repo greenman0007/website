@@ -19,7 +19,6 @@
     </context:component-scan>
 	<!-- Enables the Spring MVC @Controller programming model -->
 	<mvc:annotation-driven />
-	
     <bean  
         class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">  
         <!--配置信息转换，将用@responsebody注解的返回值转换为json返回前台，编码为utf-8-->  

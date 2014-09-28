@@ -20,4 +20,13 @@ public class ArticleDAO extends HibernateBaseDAO<Article, Long> {
 		String hql = "from Article";
 		return super.findByPage(hql, null, startIndex, pageSize);
 	}
+	/**
+	 * 根据永久链接查询
+	 * @param permalink
+	 * @return
+	 */
+	public Article findByPermalink(String permalink){
+		String hql = "from Article where articlePermalink=?";
+		return (Article) queryByHql(hql, new String[]{permalink});
+	}
 }
